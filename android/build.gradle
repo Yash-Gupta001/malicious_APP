@@ -1,18 +1,41 @@
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        // Use an AGP version compatible with Gradle 8.3
+        classpath 'com.android.tools.build:gradle:8.1.1'
+
+        // Add Kotlin Gradle Plugin dependency
+        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.10'
+    }
+}
+
 allprojects {
     repositories {
         google()
         mavenCentral()
     }
+    
+    // Force the Kotlin jvmTarget version
+    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+        kotlinOptions.jvmTarget = "17"  // Force jvmTarget to 17 for all modules
+    }
 }
 
+// Define custom build directories for all subprojects
 rootProject.buildDir = "../build"
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
 }
+
+// Ensure that the app project is evaluated first
 subprojects {
     project.evaluationDependsOn(":app")
 }
 
+// Register a clean task to delete build directories
 tasks.register("clean", Delete) {
     delete rootProject.buildDir
 }

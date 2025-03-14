@@ -3,5 +3,7 @@
         "Cupertino",
         "firestore",
         "Schyler"
-    ]
+    ],
+    "java.configuration.updateBuildConfiguration": "interactive",
+    "cmake.ignoreCMakeListsMissing": true
 }
